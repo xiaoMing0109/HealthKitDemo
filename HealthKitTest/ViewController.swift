@@ -178,14 +178,50 @@ extension ViewController: UITableViewDelegate {
         case HKObjectType.bloodPressureDiastolic:
             // write, async
             if writeStatus == .authorized {
-                PLVHealthKitManager.shared.plv_writeBloodPressureDiastolic(60, date: Date())
-                PLVHealthKitManager.shared.plv_writeBloodPressureSystolic(100, date: Date())
+                PLVHealthKitManager.shared.plv_writeBloodPressure(
+                    bloodPressureSystolic: 120,
+                    bloodPressureDiastolic: 66,
+                    date: Date()
+                )
+            }
+            
+            // read
+            let end = Date()
+            let start = end.addingTimeInterval(-3600)
+            PLVHealthKitManager.shared.plv_readBloodPresure(start: start, end: end) { _, correlations, error in
+                correlations?.forEach { correlation in
+                    if let systolic = correlation.objects(for: .bloodPressureSystolic!).first as? HKQuantitySample,
+                       let diastolic = correlation.objects(for: .bloodPressureDiastolic!).first as? HKQuantitySample {
+                        let systolicValue = systolic.quantity.doubleValue(for: .bloodPressureUnit)
+                        let diastolicValue = diastolic.quantity.doubleValue(for: .bloodPressureUnit)
+                        let unitString = String(describing: HKUnit.bloodPressureUnit)
+                        print("Read blood pressure, systolic: \(systolicValue) \(unitString), diastolic: \(diastolicValue) \(unitString)")
+                    }
+                }
             }
         case HKObjectType.bloodPressureSystolic:
             // write, async
             if writeStatus == .authorized {
-                PLVHealthKitManager.shared.plv_writeBloodPressureDiastolic(60, date: Date())
-                PLVHealthKitManager.shared.plv_writeBloodPressureSystolic(100, date: Date())
+                PLVHealthKitManager.shared.plv_writeBloodPressure(
+                    bloodPressureSystolic: 120,
+                    bloodPressureDiastolic: 66,
+                    date: Date()
+                )
+            }
+            
+            // read
+            let end = Date()
+            let start = end.addingTimeInterval(-3600)
+            PLVHealthKitManager.shared.plv_readBloodPresure(start: start, end: end) { _, correlations, error in
+                correlations?.forEach { correlation in
+                    if let systolic = correlation.objects(for: .bloodPressureSystolic!).first as? HKQuantitySample,
+                       let diastolic = correlation.objects(for: .bloodPressureDiastolic!).first as? HKQuantitySample {
+                        let systolicValue = systolic.quantity.doubleValue(for: .bloodPressureUnit)
+                        let diastolicValue = diastolic.quantity.doubleValue(for: .bloodPressureUnit)
+                        let unitString = String(describing: HKUnit.bloodPressureUnit)
+                        print("Read blood pressure, systolic: \(systolicValue) \(unitString), diastolic: \(diastolicValue) \(unitString)")
+                    }
+                }
             }
         case HKObjectType.oxygenSaturation:
             // write, async

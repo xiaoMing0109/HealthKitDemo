@@ -460,9 +460,8 @@
 				DEVELOPMENT_TEAM = QW7324TCJY;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = HealthKitTest/Info.plist;
-				INFOPLIST_KEY_NSHealthClinicalHealthRecordsShareUsageDescription = "记录健康数据";
-				INFOPLIST_KEY_NSHealthShareUsageDescription = "获取健康权限balabala";
-				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "获取健康权限balabala";
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "获取健康数据balabala";
+				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "记录健康数据balabala";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UIMainStoryboardFile = Main;
@@ -493,9 +492,8 @@
 				DEVELOPMENT_TEAM = QW7324TCJY;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = HealthKitTest/Info.plist;
-				INFOPLIST_KEY_NSHealthClinicalHealthRecordsShareUsageDescription = "记录健康数据";
-				INFOPLIST_KEY_NSHealthShareUsageDescription = "获取健康权限balabala";
-				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "获取健康权限balabala";
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "获取健康数据balabala";
+				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "记录健康数据balabala";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UIMainStoryboardFile = Main;

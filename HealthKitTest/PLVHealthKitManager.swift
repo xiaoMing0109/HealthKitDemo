@@ -220,67 +220,54 @@ extension PLVHealthKitManager {
         }
     }
     
-    /// 舒张压
-    func plv_writeBloodPressureDiastolic(
-        _ bloodPressureDiastolic: Double,
+    /// Write blood pressure.
+    /// - Parameters:
+    ///   - bloodPressureSystolic: 收缩压
+    ///   - bloodPressureDiastolic: 舒张压
+    func plv_writeBloodPressure(
+        bloodPressureSystolic: Double,
+        bloodPressureDiastolic: Double,
         date: Date,
-        completion: SaveObjectHandler? = nil
+        completion: SaveObjectsHandler? = nil
     ) {
-        guard let type = HKObjectType.bloodPressureDiastolic else {
+        guard let systolicType = HKObjectType.bloodPressureSystolic,
+              let diastolicType = HKObjectType.bloodPressureDiastolic,
+              let bloodPressureType = HKObjectType.bloodPressure
+        else {
             completion?(false, nil, nil)
             return
         }
         
-        let quantity = HKQuantity(unit: .bloodPressureUnit, doubleValue: bloodPressureDiastolic)
-        let sample = HKQuantitySample(
-            type: type,
-            quantity: quantity,
+        let systolicQuantity = HKQuantity(unit: .bloodPressureUnit, doubleValue: bloodPressureSystolic)
+        let systolicSample = HKQuantitySample(
+            type: systolicType,
+            quantity: systolicQuantity,
             start: date,
             end: date
         )
-        healthKitPermission.healthStore.save(sample) { success, error in
-            DispatchQueue.main.async {
-                completion?(success, sample, error)
-            }
-            if let error = error {
-                print("☹️ Write blood pressure diastolic error: \(error.localizedDescription)")
-            } else {
-                print("😊 Write blood pressure diastolic successfully!")
-            }
-        }
-    }
-    
-    /// 收缩压
-    func plv_writeBloodPressureSystolic(
-        _ bloodPressureSystolic: Double,
-        date: Date,
-        completion: SaveObjectHandler? = nil
-    ) {
-        guard let type = HKObjectType.bloodPressureSystolic else {
-            completion?(false, nil, nil)
-            return
-        }
         
-        let quantity = HKQuantity(unit: .bloodPressureUnit, doubleValue: bloodPressureSystolic)
-        let sample = HKQuantitySample(
-            type: type,
-            quantity: quantity,
+        let diastolicQuantity = HKQuantity(unit: .bloodPressureUnit, doubleValue: bloodPressureDiastolic)
+        let diastolicSample = HKQuantitySample(
+            type: diastolicType,
+            quantity: diastolicQuantity,
             start: date,
             end: date
         )
-        healthKitPermission.healthStore.save(sample) { success, error in
+        
+        let correlation = HKCorrelation(type: bloodPressureType, start: date, end: date, objects: [systolicSample, diastolicSample])
+        healthKitPermission.healthStore.save(correlation) { success, error in
             DispatchQueue.main.async {
-                completion?(success, sample, error)
+                completion?(success, [systolicSample, diastolicSample], error)
             }
             if let error = error {
-                print("☹️ Write blood pressure systolic error: \(error.localizedDescription)")
+                print("☹️ Write blood pressure error: \(error.localizedDescription)")
             } else {
-                print("😊 Write blood pressure systolic successfully!")
+                print("😊 Write blood pressure successfully!")
             }
         }
     }
     
-    /// 血氧
+    /// Write blood oxygen.
     /// - Parameters:
     ///   - oxygenSaturation: 0.0...1.0
     ///   - date: Record date.
@@ -348,7 +335,10 @@ extension PLVHealthKitManager {
         }
     }
     
-    /// 血糖
+    /// Write blood glucose.
+    /// - Parameters:
+    ///   - bloodGlucose: Double type.
+    ///   - unit: HKUnit {`.mg_dL/HKUnit.mmol_L`}
     func plv_writeBloodGlucose(
         _ bloodGlucose: Double,
         unit: HKUnit,
@@ -560,6 +550,38 @@ extension PLVHealthKitManager {
         }
         healthKitPermission.healthStore.execute(query)
     }
+    
+    /// 获取血压
+    func plv_readBloodPresure(
+        start: Date,
+        end: Date,
+        completion: @escaping (HKCorrelationQuery?, [HKCorrelation]?, (any Error)?) -> Void
+    ) {
+        guard let type = HKObjectType.bloodPressure else {
+            completion(nil, nil, nil)
+            return
+        }
+        
+        let predicate = HKQuery.predicateForSamples(withStart: start, end: end, options: [])
+        let query = HKCorrelationQuery(type: type, predicate: predicate, samplePredicates: nil) { query, correlations, error in
+            guard error == nil, let correlations = correlations else {
+                DispatchQueue.main.async {
+                    completion(query, correlations, error)
+                }
+                return
+            }
+            
+            DispatchQueue.main.async {
+                completion(query, correlations, error)
+            }
+        }
+        healthKitPermission.healthStore.execute(query)
+    }
+    
+    /// Stops a long-running query.
+    func plv_stopRead(_ query: HKQuery) {
+        healthKitPermission.healthStore.stop(query)
+    }
 }
 
 // MARK: - Utils
@@ -628,9 +650,11 @@ extension HKObjectType {
     static let bloodPressureDiastolic = HKQuantityType.quantityType(forIdentifier: .bloodPressureDiastolic)
     /// 收缩压
     static let bloodPressureSystolic = HKQuantityType.quantityType(forIdentifier: .bloodPressureSystolic)
-    /// 血压(暂时不要使用, 添加进去会报错)
-    /// - Warning: Terminating app due to uncaught exception 'NSInvalidArgumentException', reason: 'Authorization to read the following types is disallowed: HKCorrelationTypeIdentifierBloodPressure')
-    static let bloodPressure = HKObjectType.correlationType(forIdentifier: .bloodPressure)
+    /// 血压, 仅存储读取时使用。写入真正类型为 `bloodPressureDiastolic、bloodPressureSystolic`.
+    ///
+    /// - Warning: 不要添加进 [读、写] 授权类型中。
+    ///            Terminating app due to uncaught exception 'NSInvalidArgumentException', reason: 'Authorization to read the following types is disallowed: HKCorrelationTypeIdentifierBloodPressure')
+    static let bloodPressure = HKCorrelationType.correlationType(forIdentifier: .bloodPressure)
     /// 血氧
     static let oxygenSaturation = HKQuantityType.quantityType(forIdentifier: .oxygenSaturation)
     /// 体温
